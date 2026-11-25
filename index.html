@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TransitCred ($TCRD) | Incentivizing Eco-Friendly Urban Transport on Solana</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        },
+                        transit: {
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        },
+                        darkbg: '#090d16',
+                        darkcard: '#111827',
+                        darkborder: '#1f2937'
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Prism JS for Code Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-rust.min.js"></script>
+
+    <style>
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-panel-glow {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.15);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #10b981;
+        }
+    </style>
+</head>
+<body class="bg-darkbg text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white" x-data="appData()">
+
+    <!-- Toast Notification -->
+    <div x-show="toast.show" 
+         x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="opacity-0 translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200 transform"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 translate-y-2"
+         class="fixed bottom-6 right-6 z-50 glass-panel-glow text-white px-5 py-3 rounded-xl flex items-center gap-3 shadow-2xl border border-brand-500/40"
+         style="display: none;">
+        <i data-lucide="check-circle" class="w-5 h-5 text-brand-400"></i>
+        <span x-text="toast.message" class="text-sm font-medium"></span>
+    </div>
+
+    <!-- Navigation -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-transit-500 flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform">
+                    TC
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
+                        TransitCred <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20">$TCRD</span>
+                    </span>
+                    <p class="text-[10px] text-slate-400 tracking-wider uppercase">Solana Eco-Transport Protocol</p>
+                </div>
+            </a>
+
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+                <a href="#tokenomics" class="hover:text-brand-400 transition-colors">Tokenomics</a>
+                <a href="#staking" class="hover:text-brand-400 transition-colors">veTCRD Vault</a>
+                <a href="#architecture" class="hover:text-brand-400 transition-colors">Anchor Contract</a>
+                <a href="#roadmap" class="hover:text-brand-400 transition-colors">Roadmap</a>
+                <a href="#telegram" class="hover:text-brand-400 transition-colors">Community Hub</a>
+            </nav>
+
+            <!-- Action CTA -->
+            <div class="flex items-center gap-3">
+                <a href="https://pump.fun" target="_blank" rel="noopener noreferrer" 
+                   class="inline-flex items-center gap-2 bg-gradient-to-r from-brand-500 to-transit-500 hover:from-brand-600 hover:to-transit-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-brand-500/20 hover:scale-[1.02] active:scale-[0.98]">
+                    <i data-lucide="rocket" class="w-4 h-4"></i>
+                    <span>Buy on Pump.fun</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="relative pt-12 pb-20 md:py-28 overflow-hidden">
+            <!-- Background Glows -->
+            <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-brand-500/15 blur-[120px] rounded-full pointer-events-none"></div>
+            <div class="absolute top-1/3 left-1/3 w-[400px] h-[300px] bg-transit-500/10 blur-[140px] rounded-full pointer-events-none"></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="text-center max-w-3xl mx-auto">
+                    <!-- Status Badge -->
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/80 border border-brand-500/30 text-xs font-semibold text-brand-400 mb-6 backdrop-blur-md shadow-inner">
+                        <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+                        Phase 1: Solana Bonding Curve Live on Pump.fun
+                    </div>
+
+                    <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight leading-[1.1] mb-6">
+                        Turn Every Green Commute Into <span class="gradient-text">Real On-Chain Yield</span>
+                    </h1>
+
+                    <p class="text-lg text-slate-300 leading-relaxed mb-8 font-normal">
+                        TransitCred ($TCRD) incentivizes public transit, carpooling, biking, and walking on Solana—reducing city congestion and funding municipal transit pass discounts through dynamic burn mechanics.
+                    </p>
+
+                    <!-- CTAs -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+                        <a href="https://pump.fun" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold px-7 py-3.5 rounded-xl shadow-xl shadow-brand-500/25 transition-all text-base hover:-translate-y-0.5">
+                            <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                            Launch on Pump.fun
+                        </a>
+                        <a href="#staking" class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 glass-panel hover:bg-slate-800 text-white font-semibold px-7 py-3.5 rounded-xl border border-slate-700 transition-all text-base">
+                            <i data-lucide="vault" class="w-5 h-5 text-transit-400"></i>
+                            Simulate veTCRD Vault
+                        </a>
+                    </div>
+
+                    <!-- Contract Address Copy Box -->
+                    <div class="max-w-xl mx-auto glass-panel rounded-2xl p-3 border border-white/10 flex items-center justify-between gap-3 shadow-2xl">
+                        <div class="flex items-center gap-3 overflow-hidden px-2">
+                            <i data-lucide="shield-check" class="w-5 h-5 text-brand-400 flex-shrink-0"></i>
+                            <div class="text-left overflow-hidden">
+                                <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Solana Contract Address (CA)</p>
+                                <p class="text-xs sm:text-sm font-mono text-slate-200 truncate" x-text="contractAddress"></p>
+                            </div>
+                        </div>
+                        <button @click="copyContract()" class="flex-shrink-0 bg-slate-800 hover:bg-slate-700 text-brand-400 hover:text-white px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border border-slate-700">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span x-text="copied ? 'Copied!' : 'Copy'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hero Feature Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
+                    <div class="glass-panel p-6 rounded-2xl border border-white/5 relative overflow-hidden group hover:border-brand-500/30 transition-colors">
+                        <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="bus" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Eco-Commute Rewards</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">Earn verified $TCRD micro-rewards by taking urban mass transit, cycling, or sharing carpools along high-density transit corridors.</p>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl border border-white/5 relative overflow-hidden group hover:border-transit-500/30 transition-colors">
+                        <div class="w-12 h-12 rounded-xl bg-transit-500/10 border border-transit-500/20 flex items-center justify-center text-transit-400 mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="flame" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Deflationary Burn Engine</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">50% of tokens redeemed for municipal passes and 1.5% of merchant fee transactions are permanently burned on-chain.</p>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl border border-white/5 relative overflow-hidden group hover:border-brand-500/30 transition-colors">
+                        <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="ticket" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">veTCRD Transit Yields</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">Lock tokens in our custom Solana Anchor vault to earn subsidized city bus/rail passes and local merchant discount vouchers.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tokenomics & Burn Sinks Section -->
+        <section id="tokenomics" class="py-20 border-t border-white/5 bg-slate-950/40 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-16">
+                    <h2 class="text-xs font-bold text-brand-400 tracking-widest uppercase mb-2">Sustainable Tokenomics</h2>
+                    <p class="text-3xl sm:text-4xl font-extrabold text-white">Fixed Supply & Deflationary Mechanics</p>
+                    <p class="text-slate-400 mt-3 text-sm">Strict 1,000,000,000 (1 Billion) max supply with algorithmic burn sinks to ensure long-term value accrual.</p>
+                </div>
+
+                <!-- Metrics Overview -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+                    <div class="glass-panel p-5 rounded-2xl border border-white/5 text-center">
+                        <span class="text-xs text-slate-400 uppercase font-semibold">Total Max Supply</span>
+                        <p class="text-2xl font-black text-white mt-1">1,000,000,000</p>
+                        <span class="text-[11px] text-brand-400 font-mono">$TCRD (Fixed Cap)</span>
+                    </div>
+                    <div class="glass-panel p-5 rounded-2xl border border-white/5 text-center">
+                        <span class="text-xs text-slate-400 uppercase font-semibold">Launch Mechanism</span>
+                        <p class="text-2xl font-black text-brand-400 mt-1">Pump.fun</p>
+                        <span class="text-[11px] text-slate-400">Fair Launch Curve</span>
+                    </div>
+                    <div class="glass-panel p-5 rounded-2xl border border-white/5 text-center">
+                        <span class="text-xs text-slate-400 uppercase font-semibold">Raydium Liquidity</span>
+                        <p class="text-2xl font-black text-transit-400 mt-1">100% Burned</p>
+                        <span class="text-[11px] text-slate-400">LP Tokens Destroyed</span>
+                    </div>
+                    <div class="glass-panel p-5 rounded-2xl border border-white/5 text-center">
+                        <span class="text-xs text-slate-400 uppercase font-semibold">Staking Vault</span>
+                        <p class="text-2xl font-black text-purple-400 mt-1">veTCRD</p>
+                        <span class="text-[11px] text-slate-400">30 - 365 Days Lock</span>
+                    </div>
+                </div>
+
+                <!-- Burn Mechanics Interactive Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="glass-panel-glow p-6 rounded-2xl relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-2.5 py-1 rounded-full bg-brand-500/20 text-brand-400 text-xs font-bold border border-brand-500/30">Primary Sink</span>
+                            <i data-lucide="flame" class="w-6 h-6 text-brand-400"></i>
+                        </div>
+                        <h3 class="text-3xl font-black text-white mb-1">50%</h3>
+                        <h4 class="text-base font-bold text-brand-300 mb-2">Transit Pass Redemption Burn</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">Whenever commuters redeem $TCRD tokens for discounted municipal bus/rail passes, half of the redeemed tokens are immediately sent to the null burn address on Solana.</p>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl border border-white/10 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-2.5 py-1 rounded-full bg-transit-500/20 text-transit-400 text-xs font-bold border border-transit-500/30">Merchant Sink</span>
+                            <i data-lucide="store" class="w-6 h-6 text-transit-400"></i>
+                        </div>
+                        <h3 class="text-3xl font-black text-white mb-1">1.5%</h3>
+                        <h4 class="text-base font-bold text-transit-300 mb-2">Merchant Fee Micro-Burn</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">A standard 1.5% micro-fee applied on all local transit-corridor merchant purchases using $TCRD is automatically routed to the protocol burn vault.</p>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl border border-white/10 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-400 text-xs font-bold border border-purple-500/30">Vault Protection</span>
+                            <i data-lucide="lock" class="w-6 h-6 text-purple-400"></i>
+                        </div>
+                        <h3 class="text-3xl font-black text-white mb-1">80%</h3>
+                        <h4 class="text-base font-bold text-purple-300 mb-2">Early Unstake Penalty Burn</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">If a user unstakes from the veTCRD vault before their designated lock period completes, 80% of the slashed penalty amount is permanently burned on-chain.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- veTCRD Staking Tier Calculator Section -->
+        <section id="staking" class="py-20 border-t border-white/5 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-16">
+                    <h2 class="text-xs font-bold text-transit-400 tracking-widest uppercase mb-2">On-Chain Vault Simulation</h2>
+                    <p class="text-3xl sm:text-4xl font-extrabold text-white">veTCRD Staking Tier Calculator</p>
+                    <p class="text-slate-400 mt-3 text-sm">Lock your $TCRD tokens to calculate your governance multiplier and real-world municipal transit pass subsidies.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <!-- Controls Column -->
+                    <div class="lg:col-span-6 glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-6">
+                        <!-- Amount Slider -->
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-sm font-bold text-slate-200">Deposit Amount ($TCRD)</label>
+                                <span class="text-lg font-mono font-bold text-brand-400" x-text="formatNumber(stakedAmount) + ' TCRD'"></span>
+                            </div>
+                            <input type="range" min="1000" max="1000000" step="5000" x-model="stakedAmount" 
+                                   class="w-full h-2.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-500">
+                            <div class="flex justify-between text-[11px] text-slate-500 font-mono mt-1">
+                                <span>1,000 TCRD</span>
+                                <span>500,000 TCRD</span>
+                                <span>1,000,000 TCRD</span>
+                            </div>
+                        </div>
+
+                        <!-- Duration Buttons -->
+                        <div>
+                            <label class="text-sm font-bold text-slate-200 block mb-3">Lockup Duration</label>
+                            <div class="grid grid-cols-4 gap-2">
+                                <template x-for="duration in durations" :key="duration.days">
+                                    <button @click="selectedDays = duration.days"
+                                            :class="selectedDays === duration.days ? 'bg-brand-500 text-slate-950 font-bold border-brand-400' : 'bg-slate-800/70 text-slate-300 hover:bg-slate-700 border-slate-700'"
+                                            class="py-3 rounded-xl border text-xs sm:text-sm font-medium transition-all text-center">
+                                        <span x-text="duration.label" class="block font-bold"></span>
+                                        <span x-text="duration.days + ' Days'" class="text-[10px] opacity-80 block"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Info Box -->
+                        <div class="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-2 text-xs text-slate-400">
+                            <div class="flex justify-between">
+                                <span>Lock Unix Duration:</span>
+                                <span class="font-mono text-slate-200" x-text="(selectedDays * 86400) + ' seconds'"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Staking Smart Contract:</span>
+                                <span class="font-mono text-brand-400">transitcred_staking</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calculated Results Column -->
+                    <div class="lg:col-span-6 glass-panel-glow p-6 sm:p-8 rounded-3xl border border-brand-500/30 relative">
+                        <div class="flex items-center justify-between border-b border-white/10 pb-6 mb-6">
+                            <div>
+                                <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Your Assigned Tier</span>
+                                <h3 class="text-2xl sm:text-3xl font-black text-white mt-0.5 flex items-center gap-2" x-text="currentTier.name"></h3>
+                            </div>
+                            <div class="w-14 h-14 rounded-2xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-400">
+                                <i data-lucide="award" class="w-8 h-8"></i>
+                            </div>
+                        </div>
+
+                        <!-- Computed Yield Stats -->
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/5">
+                                <span class="text-xs text-slate-400 block font-medium">Governance Power</span>
+                                <span class="text-xl font-bold font-mono text-brand-400 mt-1 block" x-text="formatNumber(stakedAmount * currentTier.multiplier) + ' veTCRD'"></span>
+                                <span class="text-[10px] text-slate-500" x-text="currentTier.multiplier + 'x Multiplier'"></span>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/5">
+                                <span class="text-xs text-slate-400 block font-medium">Transit Pass Subsidy</span>
+                                <span class="text-xl font-bold font-mono text-transit-400 mt-1 block" x-text="currentTier.subsidy"></span>
+                                <span class="text-[10px] text-slate-500">Municipal Coverage</span>
+                            </div>
+                        </div>
+
+                        <!-- Perks List -->
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">Included Tier Benefits & Perks:</h4>
+                            <ul class="space-y-2.5">
+                                <template x-for="perk in currentTier.perks" :key="perk">
+                                    <li class="flex items-start gap-2.5 text-xs text-slate-200">
+                                        <i data-lucide="check" class="w-4 h-4 text-brand-400 flex-shrink-0 mt-0.5"></i>
+                                        <span x-text="perk"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Solana Anchor Contract Viewer Section -->
+        <section id="architecture" class="py-20 border-t border-white/5 bg-slate-950/60 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-16">
+                    <h2 class="text-xs font-bold text-brand-400 tracking-widest uppercase mb-2">On-Chain Transparency</h2>
+                    <p class="text-3xl sm:text-4xl font-extrabold text-white">Rust / Anchor Vault Architecture</p>
+                    <p class="text-slate-400 mt-3 text-sm">Review the smart contract instructions governing vault initialization and time-locked staking.</p>
+                </div>
+
+                <!-- Code Container -->
+                <div class="glass-panel rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+                    <!-- Tab Bar -->
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-900/80">
+                        <div class="flex items-center gap-2">
+                            <button @click="activeTab = 'lib'" :class="activeTab === 'lib' ? 'bg-brand-500/20 text-brand-400 border-brand-500/40' : 'text-slate-400 hover:text-white border-transparent'" class="px-3.5 py-1.5 rounded-lg border text-xs font-mono font-semibold transition-colors flex items-center gap-2">
+                                <i data-lucide="file-code" class="w-3.5 h-3.5"></i>
+                                lib.rs (Program Instructions)
+                            </button>
+                            <button @click="activeTab = 'structs'" :class="activeTab === 'structs' ? 'bg-brand-500/20 text-brand-400 border-brand-500/40' : 'text-slate-400 hover:text-white border-transparent'" class="px-3.5 py-1.5 rounded-lg border text-xs font-mono font-semibold transition-colors flex items-center gap-2">
+                                <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                                state.rs (Account Structs)
+                            </button>
+                        </div>
+                        <button @click="copyCode()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-colors">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>Copy Rust Snippet</span>
+                        </button>
+                    </div>
+
+                    <!-- Code Blocks -->
+                    <div class="p-6 bg-[#1d1f21] overflow-x-auto text-xs sm:text-sm font-mono leading-relaxed">
+                        <template x-if="activeTab === 'lib'">
+                            <pre><code class="language-rust">// TransitCred veTCRD Staking Vault Instruction Handlers
+use anchor_lang::prelude::*;
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
+
+declare_id!("TrnsCredStakingVault11111111111111111111111");
+
+#[program]
+pub mod transitcred_staking {
+    use super::*;
+
+    pub fn initialize_vault(ctx: Context<InitializeVault>) -> Result<()> {
+        let vault_state = &mut ctx.accounts.vault_state;
+        vault_state.admin = ctx.accounts.admin.key();
+        vault_state.tcrd_mint = ctx.accounts.tcrd_mint.key();
+        vault_state.total_staked = 0;
+        vault_state.bump = ctx.bumps.vault_state;
+        Ok(())
+    }
+
+    pub fn stake(ctx: Context<StakeTokens>, amount: u64, lock_duration: i64) -> Result<()> {
+        require!(amount > 0, StakingError::InvalidAmount);
+        require!(
+            lock_duration >= 30 * 86400 && lock_duration <= 365 * 86400,
+            StakingError::InvalidLockDuration
+        );
+
+        let clock = Clock::get()?;
+        let stake_account = &mut ctx.accounts.stake_account;
+
+        stake_account.owner = ctx.accounts.owner.key();
+        stake_account.amount = stake_account.amount.checked_add(amount).unwrap();
+        stake_account.locked_at = clock.unix_timestamp;
+        stake_account.lock_duration = lock_duration;
+        stake_account.tier_id = match lock_duration {
+            d if d >= 365 * 86400 => 4, // Urban Architect Tier
+            d if d >= 180 * 86400 => 3, // City Builder Tier
+            d if d >= 90 * 86400 => 2,  // Navigator Tier
+            _ => 1,                     // Commuter Tier
+        };
+        stake_account.bump = ctx.bumps.stake_account;
+
+        // Execute SPL Token CPI Transfer into PDA Vault
+        let cpi_accounts = Transfer {
+            from: ctx.accounts.user_token_account.to_account_info(),
+            to: ctx.accounts.vault_token_account.to_account_info(),
+            authority: ctx.accounts.owner.to_account_info(),
+        };
+        token::transfer(CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts), amount)?;
+
+        let vault_state = &mut ctx.accounts.vault_state;
+        vault_state.total_staked = vault_state.total_staked.checked_add(amount).unwrap();
+        Ok(())
+    }
+}</code></pre>
+                        </template>
+
+                        <template x-if="activeTab === 'structs'">
+                            <pre><code class="language-rust">#[derive(Accounts)]
+pub struct InitializeVault<'info> {
+    #[account(mut)]
+    pub admin: Signer<'info>,
+    pub tcrd_mint: Account<'info, Mint>,
+    #[account(
+        init,
+        payer = admin,
+        space = 8 + VaultState::INIT_SPACE,
+        seeds = [b"vault_state"],
+        bump
+    )]
+    pub vault_state: Account<'info, VaultState>,
+    #[account(
+        init,
+        payer = admin,
+        token::mint = tcrd_mint,
+        token::authority = vault_state,
+        seeds = [b"vault_token_account"],
+        bump
+    )]
+    pub vault_token_account: Account<'info, TokenAccount>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct VaultState {
+    pub admin: Pubkey,
+    pub tcrd_mint: Pubkey,
+    pub total_staked: u64,
+    pub bump: u8,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct StakePosition {
+    pub owner: Pubkey,
+    pub amount: u64,
+    pub locked_at: i64,
+    pub lock_duration: i64,
+    pub tier_id: u8,
+    pub bump: u8,
+}</code></pre>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Roadmap & Pump.fun Launch Strategy Section -->
+        <section id="roadmap" class="py-20 border-t border-white/5 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-16">
+                    <h2 class="text-xs font-bold text-transit-400 tracking-widest uppercase mb-2">Execution Timeline</h2>
+                    <p class="text-3xl sm:text-4xl font-extrabold text-white">Pump.fun Launch Strategy</p>
+                    <p class="text-slate-400 mt-3 text-sm">From fair-launch bonding curve deployment to Mainnet veTCRD municipal integration.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+                    <!-- Step 1 -->
+                    <div class="glass-panel p-8 rounded-3xl border border-brand-500/30 relative">
+                        <div class="w-10 h-10 rounded-xl bg-brand-500 text-slate-950 font-black flex items-center justify-center text-lg mb-6">01</div>
+                        <span class="text-xs text-brand-400 font-bold uppercase tracking-wider">Active Phase</span>
+                        <h3 class="text-xl font-bold text-white mt-1 mb-3">Pump.fun Fair Launch</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-4">Initial deployment of 1,000,000,000 $TCRD supply on Pump.fun bonding curve with zero team pre-allocation or pre-mine.</p>
+                        <ul class="space-y-2 text-xs text-slate-400">
+                            <li class="flex items-center gap-2"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-brand-400"></i> Fixed 1B max supply cap</li>
+                            <li class="flex items-center gap-2"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-brand-400"></i> Telegram bot & security rules</li>
+                        </ul>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="glass-panel p-8 rounded-3xl border border-white/10 relative">
+                        <div class="w-10 h-10 rounded-xl bg-slate-800 text-transit-400 font-black flex items-center justify-center text-lg mb-6">02</div>
+                        <span class="text-xs text-transit-400 font-bold uppercase tracking-wider">Target Cap (~$85k)</span>
+                        <h3 class="text-xl font-bold text-white mt-1 mb-3">Raydium DEX Graduation</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-4">Upon hitting bonding curve capacity, ~$12,000 of SOL liquidity is automatically deposited into Raydium and LP tokens are permanently burned.</p>
+                        <ul class="space-y-2 text-xs text-slate-400">
+                            <li class="flex items-center gap-2"><i data-lucide="clock" class="w-3.5 h-3.5 text-transit-400"></i> Automated LP token burn</li>
+                            <li class="flex items-center gap-2"><i data-lucide="clock" class="w-3.5 h-3.5 text-transit-400"></i> Coingecko & CMC listing</li>
+                        </ul>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="glass-panel p-8 rounded-3xl border border-white/10 relative">
+                        <div class="w-10 h-10 rounded-xl bg-slate-800 text-purple-400 font-black flex items-center justify-center text-lg mb-6">03</div>
+                        <span class="text-xs text-purple-400 font-bold uppercase tracking-wider">Mainnet Launch</span>
+                        <h3 class="text-xl font-bold text-white mt-1 mb-3">veTCRD & Civic Network</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-4">Deploying the Anchor staking vault to Solana mainnet and expanding local merchant discount partnerships along transit lines.</p>
+                        <ul class="space-y-2 text-xs text-slate-400">
+                            <li class="flex items-center gap-2"><i data-lucide="clock" class="w-3.5 h-3.5 text-purple-400"></i> Mainnet Anchor vault deployment</li>
+                            <li class="flex items-center gap-2"><i data-lucide="clock" class="w-3.5 h-3.5 text-purple-400"></i> Municipal transit pass integrations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Telegram & Security Hub Section -->
+        <section id="telegram" class="py-20 border-t border-white/5 bg-slate-950/40 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-16">
+                    <h2 class="text-xs font-bold text-brand-400 tracking-widest uppercase mb-2">Community & Bot Tools</h2>
+                    <p class="text-3xl sm:text-4xl font-extrabold text-white">Telegram Command Reference</p>
+                    <p class="text-slate-400 mt-3 text-sm">Interactive cheat sheet for Miss Rose (`@MissRose_bot`) automated triggers inside our official group.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <!-- Telegram Commands List -->
+                    <div class="lg:col-span-7 glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-4">
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i data-lucide="bot" class="w-5 h-5 text-brand-400"></i>
+                            Miss Rose Automated Filters & Triggers
+                        </h3>
+                        
+                        <div class="space-y-3">
+                            <div class="p-3.5 rounded-xl bg-slate-900/80 border border-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="font-mono text-xs text-brand-400 font-bold">/captcha on</span>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Enforces 1-click button verification for new joiners</p>
+                                </div>
+                                <span class="px-2 py-1 rounded bg-brand-500/10 text-brand-400 text-[10px] font-mono">Anti-Bot</span>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-slate-900/80 border border-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="font-mono text-xs text-transit-400 font-bold">/filter "contract"</span>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Triggers instant response with official Solana mint CA</p>
+                                </div>
+                                <span class="px-2 py-1 rounded bg-transit-500/10 text-transit-400 text-[10px] font-mono">Auto-Reply</span>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-slate-900/80 border border-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="font-mono text-xs text-purple-400 font-bold">/filter "admin"</span>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Displays mandatory security & anti-DM warning</p>
+                                </div>
+                                <span class="px-2 py-1 rounded bg-purple-500/10 text-purple-400 text-[10px] font-mono">Security</span>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-slate-900/80 border border-white/5 flex items-center justify-between">
+                                <div>
+                                    <span class="font-mono text-xs text-brand-400 font-bold">/setflood 5</span>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Mutes users sending more than 5 rapid messages</p>
+                                </div>
+                                <span class="px-2 py-1 rounded bg-brand-500/10 text-brand-400 text-[10px] font-mono">Anti-Flood</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Community Safety Card -->
+                    <div class="lg:col-span-5 glass-panel-glow p-6 sm:p-8 rounded-3xl border border-brand-500/30 space-y-6">
+                        <div class="flex items-center gap-3 text-amber-400">
+                            <i data-lucide="shield-alert" class="w-7 h-7"></i>
+                            <h3 class="text-xl font-bold text-white">Community Safety First</h3>
+                        </div>
+
+                        <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+                            <p class="p-3 rounded-xl bg-slate-900/80 border border-white/5">
+                                <strong class="text-white block mb-0.5">1. Admins NEVER DM First</strong>
+                                Anyone sending private DMs claiming to be support or team leads is a scammer.
+                            </p>
+                            <p class="p-3 rounded-xl bg-slate-900/80 border border-white/5">
+                                <strong class="text-white block mb-0.5">2. Protect Your Keys</strong>
+                                Never input your seed phrase or private keys into unverified forms or claims.
+                            </p>
+                        </div>
+
+                        <a href="https://t.me" target="_blank" class="w-full inline-flex items-center justify-center gap-2 bg-transit-500 hover:bg-transit-600 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-transit-500/20">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            Join Official Telegram Group
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 py-12 bg-darkbg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-transit-500 flex items-center justify-center text-slate-950 font-black text-sm">
+                    TC
+                </div>
+                <span class="text-sm font-bold text-white">TransitCred ($TCRD)</span>
+            </div>
+            <p class="text-xs text-slate-400 text-center sm:text-left">
+                © 2026 TransitCred Protocol. Incentivizing Eco-Friendly Urban Mobility on Solana.
+            </p>
+            <div class="flex items-center gap-4 text-xs text-slate-400">
+                <a href="#" class="hover:text-brand-400 transition-colors">Pump.fun</a>
+                <a href="#" class="hover:text-brand-400 transition-colors">Solscan</a>
+                <a href="#" class="hover:text-brand-400 transition-colors">Telegram</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alpine App State Logic -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('appData', () => ({
+                contractAddress: 'TrnsCredMintAddress111111111111111111111111',
+                copied: false,
+                stakedAmount: 50000,
+                selectedDays: 90,
+                activeTab: 'lib',
+                toast: {
+                    show: false,
+                    message: ''
+                },
+                durations: [
+                    { days: 30, label: '30D' },
+                    { days: 90, label: '90D' },
+                    { days: 180, label: '180D' },
+                    { days: 365, label: '365D' }
+                ],
+                tiers: {
+                    30: {
+                        name: 'Commuter Tier',
+                        multiplier: 1.0,
+                        subsidy: '10% Discount',
+                        perks: [
+                            '10% Discount on regional bus and subway passes',
+                            '1.0x veTCRD governance voting power',
+                            'Standard micro-mobility bike-share access'
+                        ]
+                    },
+                    90: {
+                        name: 'Navigator Tier',
+                        multiplier: 1.5,
+                        subsidy: '25% Discount',
+                        perks: [
+                            '25% Subsidized monthly transit pass',
+                            '1.5x veTCRD governance voting weight',
+                            'Daily $2 micro-mobility credits (scooters/bikes)',
+                            'Priority governance voting rights on route expansions'
+                        ]
+                    },
+                    180: {
+                        name: 'City Builder Tier',
+                        multiplier: 2.5,
+                        subsidy: '100% Pass Yield',
+                        perks: [
+                            '100% Fully Subsidized Monthly Regional Transit Pass',
+                            '2.5x veTCRD governance voting power',
+                            '$25 Monthly local merchant corridor voucher',
+                            'Early access to civic grant allocation votes'
+                        ]
+                    },
+                    365: {
+                        name: 'Urban Architect Tier',
+                        multiplier: 4.0,
+                        subsidy: 'Annual Transit Pass',
+                        perks: [
+                            '100% Annual Unlimited Regional All-Transit Pass',
+                            '4.0x Maximum veTCRD voting multiplier',
+                            '$50 Monthly transit-corridor dining & retail vouchers',
+                            'Direct governance seat on community grant allocation council'
+                        ]
+                    }
+                },
+                get currentTier() {
+                    return this.tiers[this.selectedDays] || this.tiers[30];
+                },
+                formatNumber(val) {
+                    return new Intl.NumberFormat().format(val);
+                },
+                copyContract() {
+                    this.copyToClipboard(this.contractAddress);
+                    this.copied = true;
+                    this.triggerToast('Contract address copied to clipboard!');
+                    setTimeout(() => { this.copied = false; }, 2000);
+                },
+                copyCode() {
+                    const code = this.activeTab === 'lib' 
+                        ? 'pub fn initialize_vault(ctx: Context<InitializeVault>) -> Result<()>...' 
+                        : 'pub struct VaultState { pub admin: Pubkey ... }';
+                    this.copyToClipboard(code);
+                    this.triggerToast('Rust snippet copied!');
+                },
+                copyToClipboard(text) {
+                    const dummy = document.createElement("textarea");
+                    document.body.appendChild(dummy);
+                    dummy.value = text;
+                    dummy.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(dummy);
+                },
+                triggerToast(msg) {
+                    this.toast.message = msg;
+                    this.toast.show = true;
+                    setTimeout(() => { this.toast.show = false; }, 3000);
+                }
+            }));
+        });
+
+        // Initialize Lucide Icons after DOM Load
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            Prism.highlightAll();
+        });
+    </script>
+</body>
+</html>
